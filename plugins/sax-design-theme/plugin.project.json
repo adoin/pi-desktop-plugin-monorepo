@@ -1,0 +1,13 @@
+{
+  "tasks": {
+    "build": ["scripts/build.cjs"],
+    "test": ["scripts/test.cjs"],
+    "browser": [
+      "scripts/test-motion.cjs",
+      "scripts/test-dissolve.cjs",
+      "scripts/test-handoff.cjs",
+      "scripts/test-search.cjs"
+    ]
+  },
+  "runtime": ["manifest.json", "main.js", "renderer", "themes", "README.md", "THIRD_PARTY_NOTICES.md", "docs"]
+}

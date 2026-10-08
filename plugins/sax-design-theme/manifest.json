@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "local.pi-desktop-sax-theme",
-  "name": "Pi Desktop Sax Theme",
-  "version": "0.5.2",
+  "name": "sax-design-theme",
+  "version": "0.5.3",
   "description": "Sax 色彩玻璃主题：原生 8px 圆角、弹层与任务退出的 SVG 粒子溶解试用版。",
   "main": "main.js",
   "renderer": "renderer/extension.mjs",
   "ui": {
     "panel": "renderer/index.html",
-    "title": "Pi Desktop Sax Theme"
+    "title": "sax-design-theme"
   },
   "contributes": {
     "windowAppearance": {
@@ -22,8 +22,9 @@
     "commands": [
       {
         "id": "pi-desktop-sax-theme.open",
-        "title": "Pi Desktop Sax Theme: Open Panel",
+        "title": "sax-design-theme: Open Panel",
         "keywords": [
+          "sax-design-theme",
           "pi-desktop-sax-theme"
         ]
       }

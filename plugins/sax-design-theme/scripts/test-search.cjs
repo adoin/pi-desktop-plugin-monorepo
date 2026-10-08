@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');const path=require('node:path');const{pathToFileURL}=require('node:url');
 (async()=>{
- const {default:puppeteer}=await import(pathToFileURL(require.resolve('puppeteer',{paths:[process.env.SAX_TEST_DEPENDENCIES||process.cwd()]})));
- const browser=await puppeteer.launch({headless:true,...(process.env.SAX_TEST_BROWSER?{executablePath:process.env.SAX_TEST_BROWSER}:{})});
+ const {launchBrowser}=require('@pi-plugins/test-utils');
+ const browser=await launchBrowser();
  try{
   const page=await browser.newPage();await page.setViewport({width:1200,height:900});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(pathToFileURL(path.resolve(__dirname,'../renderer/search.html')).href);const results=[];

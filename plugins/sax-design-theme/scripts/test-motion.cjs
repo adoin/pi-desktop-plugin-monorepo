@@ -1,12 +1,11 @@
-// Optional browser regression. Set SAX_TEST_DEPENDENCIES to a directory with puppeteer installed.
+// Browser regression through the monorepo shared test harness.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 (async () => {
-  const modulePath = require.resolve('puppeteer', { paths: [process.env.SAX_TEST_DEPENDENCIES || process.cwd()] });
-  const { default: puppeteer } = await import(pathToFileURL(modulePath));
-  const browser = await puppeteer.launch({ headless: true, ...(process.env.SAX_TEST_BROWSER ? { executablePath: process.env.SAX_TEST_BROWSER } : {}) });
+  const { launchBrowser } = require('@pi-plugins/test-utils');
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1100, height: 850 });

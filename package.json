@@ -1,0 +1,16 @@
+{
+  "name": "pi-desktop-plugin-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@12.3.4",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "plugins": "node scripts/workspace.cjs list",
+    "build": "node scripts/workspace.cjs build",
+    "test": "node scripts/workspace.cjs test",
+    "test:browser": "node scripts/workspace.cjs browser",
+    "test:workspace": "node scripts/test-workspace.cjs",
+    "stage": "node scripts/workspace.cjs stage",
+    "release:collect": "node scripts/workspace.cjs collect"
+  }
+}

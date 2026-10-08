@@ -1,0 +1,13 @@
+{
+  "name": "@adoin/sax-design-theme",
+  "private": true,
+  "version": "0.5.3",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "test": "node scripts/test.cjs",
+    "test:browser": "node ../../scripts/workspace.cjs browser sax-design-theme"
+  },
+  "devDependencies": {
+    "@pi-plugins/test-utils": "workspace:*"
+  }
+}

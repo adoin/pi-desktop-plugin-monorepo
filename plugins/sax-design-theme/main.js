@@ -1,5 +1,5 @@
 /**
- * Pi Desktop Sax Theme — PI-Desktop plugin entry.
+ * sax-design-theme — PI-Desktop plugin entry.
  *
  * The host injects the global `pi` object. Every call is gated by the
  * permissions declared in manifest.json, so widening what this file does
@@ -9,10 +9,10 @@
 async function onLoad() {
   await pi.commands.register({
     id: "pi-desktop-sax-theme.open",
-    title: "Pi Desktop Sax Theme: Open Panel",
-    keywords: ["pi-desktop-sax-theme"],
+    title: "sax-design-theme: Open Panel",
+    keywords: ["sax-design-theme", "pi-desktop-sax-theme"],
     run: async () => {
-      await pi.ui.openPanel({ title: "Pi Desktop Sax Theme" });
+      await pi.ui.openPanel({ title: "sax-design-theme" });
     },
   });
 }
