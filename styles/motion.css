@@ -1,0 +1,115 @@
+/* Scoped motion: no root, transcript, resize handle or native-window animation. */
+:root {
+  /* Reference: sax-design-vue var.scss / dialog.scss. */
+  --sax-motion-fast: 180ms;
+  --sax-motion-menu: 250ms;
+  --sax-motion-dialog: 250ms;
+  --sax-motion-exit: 150ms;
+  --sax-motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --sax-motion-offset: 6px;
+  --sax-motion-dialog-offset: 0px;
+  --sax-motion-scale: .96;
+}
+/* Independent scale/translate preserve the host positioning transform. */
+:root body :is(.context-menu, .composer-permission-menu, .composer-model-menu,
+  .home-project-switcher-menu, .settings-font-menu, .settings-language-menu,
+  .settings-theme-menu, .settings-menu-select-menu, .agent-capability-menu,
+  .projects-menu, .plugins-menu, .scope-compact-menu, .scope-popover,
+  .provider-service-menu, .model-default-menu, .plan-approval-menu) {
+  animation: none !important;
+  translate: 0 var(--sax-motion-offset);
+  scale: var(--sax-motion-scale);
+  transition: opacity var(--sax-motion-menu) var(--sax-motion-ease),
+    translate var(--sax-motion-menu) var(--sax-motion-ease), scale var(--sax-motion-menu) var(--sax-motion-ease),
+    visibility 0s linear var(--sax-motion-menu) !important;
+}
+:root body :is(.context-menu, .composer-permission-menu, .composer-model-menu,
+  .home-project-switcher-menu, .settings-font-menu, .settings-language-menu,
+  .settings-theme-menu, .settings-menu-select-menu, .agent-capability-menu,
+  .projects-menu, .plugins-menu, .scope-compact-menu, .scope-popover,
+  .provider-service-menu, .model-default-menu, .plan-approval-menu).is-open {
+  translate: 0 0;
+  scale: 1;
+  transition-delay: 0s !important;
+}
+/* First-frame entry for menus mounted already open (modern Electron). */
+@starting-style {
+  :root body :is(.context-menu, .composer-permission-menu, .composer-model-menu,
+    .home-project-switcher-menu, .settings-font-menu, .settings-language-menu,
+    .settings-theme-menu, .settings-menu-select-menu, .agent-capability-menu,
+    .projects-menu, .plugins-menu, .scope-compact-menu, .scope-popover,
+    .provider-service-menu, .model-default-menu, .plan-approval-menu).is-open {
+    opacity: 0;
+    translate: 0 var(--sax-motion-offset);
+    scale: var(--sax-motion-scale);
+  }
+}
+/* These already use host transforms for open/closed positions: fade only. */
+:root body :is(.context-inspector-popover, .provider-model-multi-menu) {
+  transition: opacity var(--sax-motion-menu) var(--sax-motion-ease),
+    visibility 0s linear var(--sax-motion-menu) !important;
+}
+:root body :is(.context-inspector-popover, .provider-model-multi-menu).is-open {
+  transition-delay: 0s !important;
+}
+/* Mounted-on-demand surfaces. Do not target every [role=dialog]: nested role
+   wrappers can otherwise animate twice. No forwards fill/retained transform. */
+:root body :is(.dialog:not(dialog), .search-dialog, .plugins-modal):not(.sax-motion-leaving),
+:root body dialog[open]:not(.sax-motion-leaving) {
+  animation: sax-dialog-enter var(--sax-motion-dialog) var(--sax-motion-ease) backwards !important;
+}
+/* Opt-in exit hook: the host must retain the surface until animationend.
+   Preview wires this hook; CSS cannot delay a React/Vue DOM unmount. */
+:root body :is(.dialog, .search-dialog, .plugins-modal).sax-motion-leaving {
+  animation: sax-dialog-exit var(--sax-motion-exit) var(--sax-motion-ease) both !important;
+}
+:root body dialog[open]::backdrop {
+  animation: sax-fade-enter var(--sax-motion-dialog) var(--sax-motion-ease) both;
+}
+:root body dialog[open].sax-motion-leaving::backdrop {
+  animation: sax-fade-exit var(--sax-motion-exit) var(--sax-motion-ease) both;
+}
+:root body :is(.sidebar-row-menu, .sidebar-popover, .notification-popover,
+  .pi-action-overflow-panel, .sidebar-session-hover-card) {
+  animation: sax-surface-enter var(--sax-motion-menu) var(--sax-motion-ease) !important;
+}
+:root body :is(.search-overlay, .plugins-modal-backdrop) {
+  animation: sax-fade-enter var(--sax-motion-dialog) var(--sax-motion-ease) both !important;
+}
+:root body .ui-tooltip { animation: sax-fade-enter var(--sax-motion-fast) ease-out !important; }
+:root body .toast:not(.closing) {
+  animation: sax-surface-enter var(--sax-motion-menu) var(--sax-motion-ease) !important;
+}
+/* Preserve the host's toast-out name: its animationend handler removes Toast. */
+/* Only color/opacity transitions: never transition all, layout or backdrop blur. */
+:root body :is(.icon-btn, .send-btn, .sax-button, .thread-item, .composer-menu-entry,
+  .composer-menu-back, .context-menu button, .plugins-menu button,
+  .projects-menu button, .agent-capability-menu button, [role="menuitem"]) {
+  transition: background-color var(--sax-motion-fast) ease-out,
+    color var(--sax-motion-fast) ease-out, opacity var(--sax-motion-fast) ease-out !important;
+}
+@keyframes sax-surface-enter {
+  from { opacity: 0; translate: 0 var(--sax-motion-offset); }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes sax-dialog-enter {
+  from { opacity: 0; scale: var(--sax-motion-scale); }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes sax-dialog-exit {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: var(--sax-motion-scale); }
+}
+@keyframes sax-fade-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sax-fade-exit { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sax-motion-fast: 0s;
+    --sax-motion-menu: 0s;
+    --sax-motion-dialog: 0s;
+    --sax-motion-exit: 0s;
+    --sax-motion-offset: 0px;
+    --sax-motion-dialog-offset: 0px;
+    --sax-motion-scale: 1;
+  }
+}

@@ -1,0 +1,22 @@
+/* Native-size layout. Native clipping is owned by windowAppearance.cornerRadius.
+   No synthetic frame, inset, CSS corner clipping or outer shadow. */
+:root:has(#root .app-shell),
+:root:has(#root .settings-shell),
+:root:has(#root .app-shell) body,
+:root:has(#root .settings-shell) body,
+:root body #root:has(.app-shell),
+:root body #root:has(.settings-shell) {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+/* Do not create a new containing block for fixed menus/window controls. */
+:root body #root:has(.app-shell),
+:root body #root:has(.settings-shell) {
+  width: 100%;
+  height: 100%;
+  transform: none;
+}

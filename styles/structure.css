@@ -1,0 +1,89 @@
+/* Theme sheets are present only while the corresponding theme is selected. */
+body { font-family: var(--font-sans); font-variant-numeric: tabular-nums lining-nums; }
+body :where(button, input, select, textarea) { font-family: inherit; font-variant-numeric: tabular-nums; }
+body :where(pre, code, kbd, samp, .font-mono, .cm-editor, .cm-content, .monaco-editor) { font-family: var(--font-mono) !important; }
+body :where(.tabular-nums, input[type="number"], time, .context-inspector-trigger) { font-variant-numeric: tabular-nums; }
+/* Do not reset SVG, math rules, checkboxes or resize hit targets. */
+body :where(button, input:not([type="checkbox"]):not([type="radio"]), textarea, select,
+  .sidebar, .sidebar-surface, .sidebar-footer, .main-pane, .work-panel, .settings-shell,
+  .settings-card, .settings-section, .settings-row, .composer-shell, .composer-toolbar,
+  .code-block, .code-block-head, .tool-row-content, .message-bubble, .asktool-card,
+  [role="dialog"], [role="menu"], .prose-chat th, .prose-chat td, .prose-chat blockquote) { border: 0 !important; }
+body :where(button, input:not([type="checkbox"]):not([type="radio"]), textarea, select,
+  .icon-btn, .mode-chip, .composer-chip, .thread-item, .badge, kbd, :not(pre) > code) { border-radius: 4px !important; }
+body :where(.composer-shell, .code-block, .tool-row-content, .message-bubble, .asktool-card,
+  .settings-card, .settings-section, [role="dialog"], [role="menu"], .composer-model-menu) { border-radius: 8px !important; }
+body :where(.code-block, .tool-row-content) { box-shadow: none !important; }
+:root body :is(.composer-shell, .asktool-card, .settings-card, .sax-glass) {
+  background: var(--sax-sheen), var(--sax-glass) !important;
+  -webkit-backdrop-filter: var(--sax-backdrop);
+  backdrop-filter: var(--sax-backdrop);
+  box-shadow: var(--sax-shadow-large) !important;
+}
+:root body :is([role="dialog"], [role="menu"], .composer-model-menu) {
+  background: var(--sax-sheen), var(--sax-glass) !important;
+  -webkit-backdrop-filter: var(--sax-backdrop);
+  backdrop-filter: var(--sax-backdrop);
+  box-shadow: var(--sax-shadow-floating) !important;
+}
+:root body .message-row.user .message-bubble:not(:has(.message-edit)) {
+  background: var(--sax-sheen), var(--sax-primary-soft) !important;
+  color: var(--sax-ink);
+  box-shadow: var(--sax-shadow-small) !important;
+}
+:root body .thread-item.active {
+  background: var(--sax-primary-soft) !important;
+  color: var(--sax-primary) !important;
+  box-shadow: none !important;
+}
+:root body :is(.app-shell, .settings-shell) { background: var(--sax-ambient) !important; }
+:root body :is(.main-pane, .chat-surface, .composer-dock) { background: transparent !important; }
+:root body :is(.sidebar-surface, .sidebar-rail, .work-panel) {
+  background: var(--sax-sheen), var(--sax-glass) !important;
+  -webkit-backdrop-filter: var(--sax-backdrop);
+  backdrop-filter: var(--sax-backdrop);
+  box-shadow: var(--sax-shadow-small) !important;
+}
+body :where(.sidebar-session-groups, .sidebar-session-group-list, .composer-stack) { gap: var(--sax-gap); }
+body :where(.composer-toolbar, .composer-left, .composer-right) { gap: 8px; }
+body :where(.settings-section) { margin-block-end: 20px; }
+/* Text is not a floating object: avoid stacked shadows on nested surfaces. */
+/* Leave semantic separators in the accessibility tree and preserve spacing. */
+body :where(hr, [role="separator"]:not([tabindex]), .home-project-switcher-divider,
+  .dropdown-divider, .menu-divider) { border: 0 !important; background: none !important; box-shadow: none !important; opacity: 0; }
+body :where(.prose-chat table) { border-collapse: separate; border-spacing: 4px; }
+body :where(.prose-chat td, .prose-chat th) { background: var(--sax-canvas); border-radius: 4px; }
+body :where(.prose-chat blockquote) { background: var(--sax-canvas); padding: 12px 16px; border-radius: 8px; }
+body :where(.code-block, .prose-chat pre) { --code-block-bg: var(--sax-inset); background: var(--sax-inset) !important; color: var(--sax-ink); }
+:root body :is(.send-btn:not(:disabled), .sax-button) { background: var(--sax-action) !important; color: var(--sax-surface) !important; box-shadow: var(--sax-shadow-small) !important; }
+:root body :is(.send-btn:not(:disabled), .sax-button):hover { background: var(--sax-action-hover) !important; }
+:root body :is(.send-btn:not(:disabled), .sax-button):active { background: var(--sax-action-active) !important; box-shadow: none !important; }
+body :where(button, a, input, textarea, select, [tabindex], [contenteditable="true"]):focus-visible {
+  outline: 0 !important;
+  background-color: var(--sax-primary-soft);
+  box-shadow: var(--sax-shadow-small) !important;
+}
+/* Keyboard focus is a filled highlight, never a ring or omnidirectional glow. */
+:root body :is(button, a, [tabindex]):focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+:root body :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus-visible {
+  background-color: var(--sax-primary-soft) !important;
+}
+:root body .composer-shell:focus-within {
+  background: var(--sax-sheen), var(--sax-glass-focus) !important;
+  box-shadow: var(--sax-shadow-large) !important;
+}
+:root body .composer-shell :is(.composer-input, textarea, [contenteditable="true"]),
+:root body .composer-shell :is(.composer-input, textarea, [contenteditable="true"]):focus-visible {
+  background: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+@supports not (backdrop-filter: blur(1px)) {
+  :root body :is(.composer-shell, .asktool-card, .settings-card, .sax-glass, .sidebar-surface, .sidebar-rail, .work-panel, [role="dialog"], [role="menu"], .composer-model-menu) { background: var(--sax-raised) !important; }
+}
+@media (forced-colors: active) {
+  /* Accessibility exception: system high-contrast mode cannot rely on shadows. */
+  :root body :is(button, a, input, textarea, select, [tabindex], [contenteditable="true"]):focus-visible,
+  :root body .composer-shell :is(.composer-input, textarea, [contenteditable="true"]):focus-visible { outline: 2px solid Highlight !important; }
+}

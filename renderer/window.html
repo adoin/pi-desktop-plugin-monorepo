@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-maximized="false" data-fullscreen="false">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sax · 透明宿主模拟</title>
+<link id="theme" rel="stylesheet" href="../themes/sax-light.css">
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0;font-size:14px;color:var(--sax-ink)}
+.app-shell{display:flex;flex-direction:column;background:var(--sax-ambient);height:100%;min-height:0}
+.titlebar{height:46px;flex:none;padding:12px 16px;background:var(--sax-glass);font-size:12px;padding-right:180px}
+.controls{position:fixed;right:8px;top:8px;display:flex;gap:6px;z-index:5}
+button,a{font:inherit;padding:6px 10px;border:0;background:var(--sax-primary-soft);color:var(--sax-primary);cursor:pointer}
+.layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,32%)}
+.main-pane{padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0;overflow:auto}
+h1{font-size:24px;margin:0}p{line-height:1.7;color:var(--sax-secondary)}
+.work-panel{padding:20px;overflow:auto}.work-panel p{font-size:12px}
+.composer-shell{margin-top:auto;padding:16px;min-height:120px}.composer-input{font:inherit;width:100%;min-height:72px;resize:vertical;color:var(--sax-ink)}
+.status{font-size:12px;color:var(--sax-muted)}
+@media(max-width:520px){.main-pane{padding:14px}.work-panel{padding:12px}.titlebar{font-size:10px}h1{font-size:20px}}
+</style></head>
+<body><div id="root"><div class="app-shell">
+<header class="titlebar">SAX / TRANSPARENT HOST</header>
+<div class="controls"><button id="mode">深色</button><button id="maximize" aria-pressed="false">最大化</button></div>
+<div class="layout"><main class="main-pane"><h1>原始窗口尺寸。</h1><p>零外框留白，零根容器投影，不做 CSS 圆角裁切。标题栏和面板使用原始窗口坐标。</p><p class="status">8px 圆角由宿主 windowAppearance.cornerRadius 实现，浏览器不会模拟原生裁切。</p><a href="index.html">返回色彩预览</a><div class="composer-shell"><textarea class="composer-input" aria-label="模拟输入框" placeholder="试试输入焦点…"></textarea><span class="status">内部组件阴影保留</span></div></main><aside class="work-panel" data-maximized="true"><h2>工作面板</h2><p>正常、最大化及全屏都铺满可用区域。</p><p>窗口外侧的圆角与阴影由宿主负责。</p></aside></div>
+</div></div><script>
+document.getElementById('mode').onclick=()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';document.getElementById('theme').href=`../themes/sax-${dark?'dark':'light'}.css`;document.getElementById('mode').textContent=dark?'浅色':'深色';};
+document.getElementById('maximize').onclick=()=>{const max=document.documentElement.dataset.maximized!=='true';document.documentElement.dataset.maximized=String(max);document.getElementById('maximize').textContent=max?'还原':'最大化';document.getElementById('maximize').setAttribute('aria-pressed',String(max));};
+</script></body></html>
