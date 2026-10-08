@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "local.pi-desktop-sax-theme",
+  "id": "${PLUGIN_NAMESPACE}.sax-design-theme",
   "name": "sax-design-theme",
   "version": "0.5.3",
   "description": "Sax 色彩玻璃主题：原生 8px 圆角、弹层与任务退出的 SVG 粒子溶解试用版。",

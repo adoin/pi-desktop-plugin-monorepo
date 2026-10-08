@@ -49,7 +49,7 @@ const sleep=(ms: number)=>new Promise<void>(r=>setTimeout(r,ms));
   // Reduced motion and inactive themes never create snapshots on removal.
   await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'reduce'}]);await sleep(400);await clear();await page.click('#dialog-open');await sleep(100);await page.click('#dialog-close');await clean();assert.equal(await page.evaluate(()=>(window as TestWindow).seen.length),0);
   await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'no-preference'}]);await page.evaluate(()=>document.documentElement.dataset.pluginTheme='builtin');await sleep(400);await clear();await page.click('#dialog-open');await sleep(300);await page.click('#dialog-close');await clean();assert.equal(await page.evaluate(()=>(window as TestWindow).seen.length),0);
-  await page.evaluate(()=>document.documentElement.dataset.pluginTheme='plugin:local.pi-desktop-sax-theme:sax-dark');await sleep(400);
+  await page.evaluate(()=>document.documentElement.dataset.pluginTheme=`plugin:${document.querySelector<HTMLElement>('[data-pi-plugin]')!.dataset.piPlugin}:sax-dark`);await sleep(400);
   await reset();await page.evaluate(()=>document.querySelector('[data-sidebar-session-row="demo-1"]')!.classList.add('active'));await menu();
   await page.evaluate(()=>{const b=document.querySelector<HTMLElement>('[data-action="toggle-session-archive"]')!;b.onclick=()=>{const row=document.querySelector('[data-sidebar-session-row="demo-1"]')!,parent=row.parentElement!;document.querySelector('.sidebar-floating-menu')!.remove();row.remove();setTimeout(()=>parent.append(row),750);};b.click();});
   await sleep(1000);assert.equal(await rowEvents(),0,'active task slow rollback must not dissolve');

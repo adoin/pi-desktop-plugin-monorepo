@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { ROOT, ARTIFACTS, inside, discover, buildDirectory, readJson } from './workspace.ts';
+import { ROOT, ARTIFACTS, inside, discover, buildDirectory, readJson, resolveManifest, pluginNamespace } from './workspace.ts';
 import { findBrowser } from '../packages/test-utils/browser.ts';
 import type { PluginManifest } from '../packages/plugin-types/src/project.ts';
 const plugins = discover();
@@ -24,6 +24,11 @@ function files(dir: string, prefix = ''): string[] {
 }
 for (const plugin of plugins) {
   const runtimeDir = buildDirectory(plugin.dir);
+  const template = readJson<PluginManifest>(path.join(plugin.dir, 'manifest.json'));
+  assert.equal(resolveManifest(template, plugin.name, 'adoin').id, `adoin.${plugin.name}`);
+  assert.equal(resolveManifest(template, plugin.name, 'other').id, `other.${plugin.name}`);
+  assert.throws(() => resolveManifest(template, plugin.name, '../invalid'));
+  assert.throws(() => resolveManifest({ ...template, id: 'local.old' }, plugin.name, 'adoin'));
   assert.ok(!fs.existsSync(path.join(plugin.dir, 'dist')), 'plugin-local dist is forbidden');
   for (const entry of plugin.project.generated) {
     assert.ok(!fs.existsSync(inside(plugin.dir, entry)), `generated output leaked into sources: ${entry}`);
@@ -43,7 +48,7 @@ for (const plugin of plugins) {
     const generated = plugin.project.generated.some(entry => relative === entry || relative.startsWith(entry + '/'));
     if (!generated) {
       assert.ok(plugin.project.assets.some(entry => relative === entry || relative.startsWith(entry + '/')), `undeclared static asset: ${relative}`);
-      assert.ok(output.equals(fs.readFileSync(inside(plugin.dir, relative))), `stale source copy: ${relative}`);
+      if (relative !== 'manifest.json') assert.ok(output.equals(fs.readFileSync(inside(plugin.dir, relative))), `stale source copy: ${relative}`);
     }
     if (relative.endsWith('.mjs')) {
       for (const match of output.toString().matchAll(/\bimport\s+(?:[^'";]*?\s+from\s*)?['"]([^'"]+)['"]/g)) {
@@ -66,7 +71,7 @@ const theme = plugins.find(p => p.name === 'sax-design-theme');
 if (theme) {
   assert.equal(theme.manifest.name, 'sax-design-theme');
   assert.equal(theme.manifest.ui?.title, 'sax-design-theme');
-  assert.equal(theme.manifest.id, 'local.pi-desktop-sax-theme', 'keep installed-plugin upgrade identity');
+  assert.equal(theme.manifest.id, `${pluginNamespace()}.sax-design-theme`);
   assert.equal(theme.manifest.contributes?.commands?.[0].title, 'sax-design-theme: Open Panel');
 }
 console.log('PASS workspace paths, identity, version agreement and browser configuration.');

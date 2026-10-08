@@ -1,13 +1,24 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
+import { parseEnv } from 'node:util';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import type { PluginManifest, PluginProject, PluginTask, WorkspacePlugin, ReleaseInfo } from '../packages/plugin-types/src/project.ts';
+import type { PluginManifest, PluginProject, PluginTask, WorkspacePlugin } from '../packages/plugin-types/src/project.ts';
 
 export const ROOT = path.resolve(__dirname, '..');
 export const ARTIFACTS = path.join(ROOT, '.artifacts');
 export const readJson = <T>(file: string): T => JSON.parse(fs.readFileSync(file, 'utf8')) as T;
+export function pluginNamespace(): string {
+  const envFile = path.join(ROOT, '.env');
+  const value = process.env.PLUGIN_NAMESPACE ?? (fs.existsSync(envFile) ? parseEnv(fs.readFileSync(envFile, 'utf8')).PLUGIN_NAMESPACE : undefined);
+  if (!value || !/^[a-z][a-z0-9-]*$/.test(value)) throw new Error('Set PLUGIN_NAMESPACE in root .env (copy .env.example), or in the environment; use a lowercase namespace such as adoin.');
+  return value;
+}
+export function resolveManifest(manifest: PluginManifest, name: string, namespace = pluginNamespace()): PluginManifest {
+  if (!/^[a-z][a-z0-9-]*$/.test(namespace)) throw new Error('Invalid plugin namespace');
+  if (manifest.id !== '${PLUGIN_NAMESPACE}.' + name) throw new Error(`${name}: manifest.id must be \u0024{PLUGIN_NAMESPACE}.${name}`);
+  return { ...manifest, id: `${namespace}.${name}` };
+}
 export function inside(base: string, relative: string): string {
   if (typeof relative !== 'string' || !relative || path.isAbsolute(relative) || relative.includes('\\') || relative.split('/').some(x => !x || x === '.' || x === '..')) throw new Error(`Invalid relative path: ${relative}`);
   const absolute = path.resolve(base, relative);
@@ -25,7 +36,7 @@ function ensureDirectory(dir: string): void {
     if (fs.existsSync(current)) assertNoSymlink(current); else fs.mkdirSync(current);
   }
 }
-const forbidden = /^(?:\.git|node_modules|dist|scripts|styles|package\.json|plugin\.project\.json|tsconfig[^/]*)(?:\/|$)|\.(?:ts|tsx|map)$/;
+const forbidden = /^(?:\.env(?:\.[^/]*)?|\.git|node_modules|dist|scripts|styles|package\.json|plugin\.project\.json|tsconfig[^/]*)(?:\/|$)|\.(?:ts|tsx|map)$/;
 function validateProject(project: PluginProject): void {
   for (const key of ['assets', 'runtime', 'generated'] as const) {
     if (!Array.isArray(project[key])) throw new Error(`project.${key} must be an array`);
@@ -47,7 +58,7 @@ export function discover(): WorkspacePlugin[] {
   return fs.readdirSync(path.join(ROOT, 'plugins'), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(e.name)) throw new Error(`Invalid plugin folder: ${e.name}`);
     const dir = path.join(ROOT, 'plugins', e.name);
-    const manifest = readJson<PluginManifest>(path.join(dir, 'manifest.json'));
+    const manifest = resolveManifest(readJson<PluginManifest>(path.join(dir, 'manifest.json')), e.name);
     const pkg = readJson<{ version: string }>(path.join(dir, 'package.json'));
     const project = readJson<PluginProject>(path.join(dir, 'plugin.project.json'));
     validateProject(project);
@@ -86,6 +97,7 @@ export function prepareBuild(plugin: WorkspacePlugin): string {
   fs.rmSync(target, { recursive: true, force: true });
   fs.mkdirSync(target);
   for (const entry of plugin.project.assets) copyRuntime(inside(plugin.dir, entry), inside(target, entry));
+  fs.writeFileSync(path.join(target, 'manifest.json'), JSON.stringify(plugin.manifest, null, 2) + '\n');
   return target;
 }
 export function runTask(plugin: WorkspacePlugin, task: PluginTask): void {
@@ -107,7 +119,7 @@ export function stage(plugin: WorkspacePlugin): string {
   console.log(`Runtime ready: ${path.relative(ROOT, target)}`);
   return target;
 }
-export function collect(plugin: WorkspacePlugin): ReleaseInfo {
+export function collect(plugin: WorkspacePlugin): string {
   const staged = buildDirectory(plugin.dir);
   const manifest = readJson<PluginManifest>(path.join(staged, 'manifest.json'));
   if (manifest.id !== plugin.manifest.id || manifest.version !== plugin.manifest.version) throw new Error('Runtime manifest is stale; build/check/pack again');
@@ -121,14 +133,10 @@ export function collect(plugin: WorkspacePlugin): ReleaseInfo {
     if (!fs.readFileSync(destination).equals(data)) throw new Error(`Release already exists with different content: ${filename}. Bump the plugin version before collecting; both packages were preserved.`);
   } else fs.copyFileSync(source, destination, fs.constants.COPYFILE_EXCL);
   if (!fs.readFileSync(destination).equals(data)) throw new Error('Collected package verification failed');
-  const info: ReleaseInfo = { plugin: plugin.name, id: manifest.id, name: manifest.name, version: manifest.version, file: filename, bytes: data.length, sha256: crypto.createHash('sha256').update(data).digest('hex') };
-  const metadata = path.join(output, `${manifest.id}-${manifest.version}.json`);
-  if (fs.existsSync(metadata)) assertNoSymlink(metadata);
-  fs.writeFileSync(metadata, JSON.stringify(info, null, 2) + '\n');
   fs.unlinkSync(source);
   if (!fs.readdirSync(path.dirname(source)).length) fs.rmdirSync(path.dirname(source));
   console.log(`Ready for website upload: ${path.relative(ROOT, destination)}`);
-  return info;
+  return destination;
 }
 function main(args: string[]): void {
   const [command = 'list', name, ...extra] = args;

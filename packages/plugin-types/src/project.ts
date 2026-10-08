@@ -31,12 +31,3 @@ export interface WorkspacePlugin {
   manifest: PluginManifest;
   project: PluginProject;
 }
-export interface ReleaseInfo {
-  plugin: string;
-  id: string;
-  name: string;
-  version: string;
-  file: string;
-  bytes: number;
-  sha256: string;
-}

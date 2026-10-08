@@ -28,4 +28,4 @@ export interface RendererPluginApi {
   ui: { openLayer(): RendererLayer };
 }
 
-export type { PluginTask, PluginProject, PluginManifest, WorkspacePlugin, ReleaseInfo } from './project.js';
+export type { PluginTask, PluginProject, PluginManifest, WorkspacePlugin } from './project.js';

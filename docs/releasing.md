@@ -9,12 +9,12 @@
 3. 构建直接生成唯一运行目录 `.artifacts/plugins/sax-design-theme/`。兼容命令 `pnpm run stage sax-design-theme` 只是 build + test，不另存暂存副本。重建只影响当前插件的运行目录，源码、其他插件与 releases 不受影响；有未收集的包时会要求先 collect。
 4. 执行 `pnpm test:workspace` 检查运行目录独立性。
 5. 在 PI-Desktop 中运行 **PluginCheck** 和 **PluginPack**，directory 都使用 `.artifacts/plugins/sax-design-theme`。不要对整个 monorepo 打包，不要使用 zip/tar 替代 PluginPack。
-6. 执行 `pnpm release:collect sax-design-theme`，从 `.artifacts/releases/` 获得 `.piplug` 和记录 SHA-256 的 JSON。collect 校验复制结果后移除官方工具临时生成的 dist 包，避免同一安装包保留两份；不创建压缩文件。
+6. 执行 `pnpm release:collect sax-design-theme`，仅在 `.artifacts/releases/` 保留 `.piplug`，不生成 JSON。collect 校验复制结果后移除官方工具临时生成的 dist 包，避免同一安装包保留两份；不创建压缩文件。
 7. 安装该包验收，确认授权、升级、卸载与运行行为。
 8. 在你专门的插件发布网页上传 `.piplug` 并填写网页要求的元数据。当前未配置网页 API，也不会自动提交或保存发布凭据。
 9. 提交对应源码；可选 Git 标签 `sax-design-theme-v0.5.3`，不必将所有插件一起升版。
 
-`.artifacts/`、node_modules 和 dist 都不提交 Git。不要把网页登录信息或令牌写进 manifest、源码或发布元数据。安装包文件名按内部插件 ID 命名，因此当前主题仍生成 `local.pi-desktop-sax-theme-<version>.piplug`，显示名称则为 sax-design-theme。
+`.artifacts/`、node_modules、dist 和根 .env 都不提交 Git。根 .env 配置 `PLUGIN_NAMESPACE=adoin` 后，当前安装包名为 `adoin.sax-design-theme-<version>.piplug`。更改命名空间属于插件身份迁移，不会升级旧 local ID 安装；先停用或卸载旧插件，再安装新包并重新选择主题。不要把凭据加入源码或安装包。
 
 同一 ID/版本的 releases 包若已存在，collect 只允许内容完全相同的重复收集；内容不同会报错并保留两份文件，需升级 manifest/package 版本后重新构建发布，不能静默覆盖历史发布包。
 

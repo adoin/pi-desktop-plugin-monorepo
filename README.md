@@ -22,7 +22,7 @@ packages/
 scripts/*.ts                 # 工作区任务与产物检查
 .artifacts/                  # 全部生成产物，不提交 Git
   plugins/<插件目录>/        # 唯一运行目录：编译后的 JS + HTML/CSS/资源
-  releases/                  # 最终 .piplug 与 SHA-256 元数据
+  releases/                  # 仅最终 .piplug 安装包
 ```
 
 根目录 `plugins/` 是 TypeScript 源码，`.artifacts/plugins/` 是宿主能直接运行的 JavaScript。HTML、manifest 等静态资源按白名单复制，TS 编译并打包，不包含源码、开发依赖或类型包。
@@ -32,6 +32,8 @@ scripts/*.ts                 # 工作区任务与产物检查
 ## 环境与命令
 
 Node.js >=22.12，pnpm 12.3.4（按 packageManager 准备，例如使用 Corepack）。
+
+首次开发先执行 `Copy-Item .env.example .env`，根目录 `.env` 配置 `PLUGIN_NAMESPACE=adoin`。所有插件 ID 统一为 `<命名空间>.<插件目录名>`，例如 `adoin.sax-design-theme`。CI 可用同名环境变量覆盖；缺失或不合法时构建报错，`.env` 不提交也不打入安装包。
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -73,4 +75,4 @@ PluginPack  directory=".artifacts/plugins/sax-design-theme"
 
 ## 命名与版本
 
-当前显示名为 **sax-design-theme**，内部 ID 保留 `local.pi-desktop-sax-theme`，主题和命令 ID 保留，兼容已有安装。各插件的 manifest.json 与 package.json 版本必须一致，独立升级；根项目和公共工具包不跟随插件同步升版。此次工程改造不新增权限，不改变主题设计。
+当前显示名为 **sax-design-theme**，插件 ID 从根目录 `.env` 生成，默认配置下为 `adoin.sax-design-theme`。源码 manifest 使用 `${PLUGIN_NAMESPACE}.sax-design-theme` 模板，不能直接加载。此次从旧 local ID 迁移是新插件身份，不会覆盖旧安装；请先停用或卸载旧插件，再安装新包并重新选择主题。主题和命令 ID 暂不改动。各插件 manifest.json 与 package.json 版本保持一致，独立升级。

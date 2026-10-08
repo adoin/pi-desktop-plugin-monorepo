@@ -1,3 +1,4 @@
+import { PLUGIN_ID } from './identity.js';
 import type { RendererPluginApi } from '@pi-plugins/plugin-types';
 import { captureSurface, createDissolveEngine, type SurfaceSnapshot, type PlayOptions } from './dissolve.js';
 const ROW='.thread-item[data-sidebar-session-row]';
@@ -8,7 +9,7 @@ const ACTIONS=new Set(['delete-session','batch-delete','toggle-session-archive',
 const STATED='.context-menu,.composer-model-menu,.composer-permission-menu,.settings-theme-menu,.settings-language-menu,.settings-menu-select-menu';
 const EXIT='.closing,.is-closing,.sax-motion-leaving,[data-state="closed"]';
 
-export function attachHostDissolve(pi: RendererPluginApi,{doc=document,activeTheme=()=>(doc.documentElement.dataset.pluginTheme||'').startsWith('plugin:local.pi-desktop-sax-theme:')}={}) {
+export function attachHostDissolve(pi: RendererPluginApi,{doc=document,activeTheme=()=>(doc.documentElement.dataset.pluginTheme||'').startsWith(`plugin:${PLUGIN_ID}:`)}={}) {
   const view=doc.defaultView!,media=view.matchMedia('(prefers-reduced-motion: reduce)');
   const layer=pi.ui.openLayer(),engine=createDissolveEngine(layer.element);
   const surfaces=new Map<Element, SurfaceSnapshot>(),pending=new Map<string | undefined, {snapshot: SurfaceSnapshot; group: Element; created: number}>(),faded=new WeakSet<Element>();

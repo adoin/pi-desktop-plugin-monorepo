@@ -4,13 +4,13 @@
 
 ## 安装与权限
 
-安装 `local.pi-desktop-sax-theme-0.5.3.piplug`，显示名称为 **sax-design-theme**。内部 ID 保留 `local.pi-desktop-sax-theme` 以兼容已有安装。更新后切换到内置主题再切回 Sax Light / Sax Dark。要求 PI-Desktop >=0.17.0；本次仅迁移 monorepo、统一名称与开发工具，不新增权限或改变主题功能。
+根目录 `.env` 配置 `PLUGIN_NAMESPACE=adoin` 时，安装包为 `adoin.sax-design-theme-0.5.3.piplug`，插件 ID 为 `adoin.sax-design-theme`，显示名称为 **sax-design-theme**。这是相对旧 local ID 的新插件身份，不会原位升级旧安装；先停用或卸载旧插件，再安装新包并选择 Sax Light / Sax Dark。要求 PI-Desktop >=0.17.0，不新增权限或改变主题功能。
 
 权限为 `ui.theme`、`ui.panel`、`ui.window.appearance` 和 `renderer.extension`。最后一项表示受信任 JavaScript 在宿主主窗口中执行，能够读取 DOM；不是隔离面板权限。没有新增网络、文件、剪贴板或业务删除权限。
 
 ## 0.5.3 工程迁移与名称
 
-源码迁入 `plugins/sax-design-theme/`，执行逻辑、构建和测试均使用 strict TypeScript，公用宿主 API 类型位于 `packages/plugin-types/`。先在根目录执行 `pnpm typecheck`、`pnpm build sax-design-theme`，开发加载选择 `.artifacts/plugins/sax-design-theme/`，不要加载源码或 monorepo 根目录。该目录是唯一运行产物，不再保留 build/stage 副本。下文 renderer 预览路径均相对于运行目录；插件、命令和主题 ID 保留兼容。
+源码迁入 `plugins/sax-design-theme/`，执行逻辑、构建和测试均使用 strict TypeScript，公用宿主 API 类型位于 `packages/plugin-types/`。先在根目录执行 `pnpm typecheck`、`pnpm build sax-design-theme`，开发加载选择 `.artifacts/plugins/sax-design-theme/`，不要加载源码或 monorepo 根目录。该目录是唯一运行产物，不再保留 build/stage 副本。下文 renderer 预览路径均相对于运行目录；插件 ID 由根 .env 生成，命令和主题 ID 保留。
 
 正式包从 `.artifacts/plugins/sax-design-theme/` 使用 PluginCheck / PluginPack 生成，再由根目录 `pnpm release:collect sax-design-theme` 收集到 `.artifacts/releases/`，提交专门的插件发布网页，不走官方仓库 PR。
 

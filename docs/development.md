@@ -1,5 +1,9 @@
 # TypeScript 插件开发
 
+先在根目录执行 `Copy-Item .env.example .env`，配置 `PLUGIN_NAMESPACE=adoin`。命名空间只在构建期读取，环境变量可覆盖根 .env，不能缺失；不要把 .env 加入 assets。
+
+所有插件源码 manifest 的 id 使用 `${PLUGIN_NAMESPACE}.<插件目录名>` 模板，统一入口生成完整运行 manifest（例如 `adoin.sax-design-theme`）。如果运行代码需要自身 ID，应从解析后的 manifest 注入编译期常量，参考主题 build.ts 和 renderer/identity.ts，不要硬编码命名空间。改命名空间会产生全新插件身份，需重新安装和选择主题。
+
 ## 已有主题
 
 源码在 `plugins/sax-design-theme/`。先 `pnpm install --frozen-lockfile`，再 `pnpm typecheck`、`pnpm build sax-design-theme`。开发加载 `.artifacts/plugins/sax-design-theme/`，预览打开该目录下 `renderer/index.html`。不要加载源码目录，也不要编辑产物。
@@ -8,7 +12,7 @@
 
 ## 集中共用类型
 
-`packages/plugin-types/src/index.ts` 定义插件共用的命令注册、主入口 API、renderer layer API；`src/project.ts` 定义 PluginProject、PluginManifest、WorkspacePlugin、ReleaseInfo 等工程接口。声明仅覆盖仓库已用到的宿主契约，不声称是完整官方 SDK。扩展宿主能力时按实际接口补充类型和权限。
+`packages/plugin-types/src/index.ts` 定义插件共用的命令注册、主入口 API、renderer layer API；`src/project.ts` 定义 PluginProject、PluginManifest、WorkspacePlugin 等工程接口。声明仅覆盖仓库已用到的宿主契约，不声称是完整官方 SDK。扩展宿主能力时按实际接口补充类型和权限。
 
 插件在 devDependencies 声明 `"@pi-plugins/plugin-types": "workspace:*"`，使用 `import type`，不在各插件复制一套 API 类型。主题私有的粒子快照、预览测试钩子仍留在主题目录，不放入公共 API。不要用 any 或 ts-nocheck 绕过迁移。
 

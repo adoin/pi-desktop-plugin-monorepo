@@ -1,9 +1,11 @@
 // Bundled with the shared modules for file:// previews.
+import { PLUGIN_ID } from './identity.js';
 import { captureSurface, createDissolveEngine } from './dissolve.js';
 import { attachHostDissolve } from './host-dissolve.js';
 import type { PreviewDocument } from '../runtime-types.js';
 const document = window.document as PreviewDocument;
-const mockPi={ui:{openLayer(){const element=document.createElement('div');element.dataset.piPlugin='local.pi-desktop-sax-theme';Object.assign(element.style,{position:'fixed',top:'0',left:'0',width:'0',height:'0',zIndex:'600'});document.body.append(element);return {element,close:()=>element.remove()};}}};
+document.documentElement.dataset.pluginTheme = `plugin:${PLUGIN_ID}:sax-light`;
+const mockPi={ui:{openLayer(){const element=document.createElement('div');element.dataset.piPlugin=PLUGIN_ID;Object.assign(element.style,{position:'fixed',top:'0',left:'0',width:'0',height:'0',zIndex:'600'});document.body.append(element);return {element,close:()=>element.remove()};}}};
 let controller: ReturnType<typeof attachHostDissolve> | null=attachHostDissolve(mockPi);
 const rows=document.getElementById('rows');let menu: HTMLDivElement | null=null;
 function closeMenu(){menu?.remove();menu=null;document.querySelectorAll('[data-action="session-menu"]').forEach(b=>b.setAttribute('aria-expanded','false'));}
