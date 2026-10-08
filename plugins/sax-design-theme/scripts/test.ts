@@ -1,17 +1,20 @@
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const { build, hues, palettes, buildDissolvePreview } = require('./build.cjs');
-const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.json'), 'utf8'));
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { build, hues, palettes, buildDissolvePreview } from './build.ts';
+import { buildDirectory, readJson } from '../../../scripts/workspace.ts';
+import type { PluginManifest, CommandRegistration, MainPluginApi } from '@pi-plugins/plugin-types';
+const output = buildDirectory(path.resolve(__dirname, '..'));
+const manifest = readJson<PluginManifest>(path.join(output, 'manifest.json'));
 assert.ok(manifest.permissions.includes('ui.window.appearance'), 'native appearance permission required');
-assert.deepEqual(manifest.contributes.windowAppearance, {
+assert.deepEqual(manifest.contributes?.windowAppearance, {
   backgroundColor: { light: '#00000000', dark: '#00000000' }, cornerRadius: 8
 }, 'CSS transparency must be paired with native transparency in both modes');
 assert.equal(manifest.engines.piDesktop, '>=0.17.0');
 assert.ok(manifest.permissions.includes('renderer.extension'));
 assert.equal(manifest.renderer, 'renderer/extension.mjs');
-assert.equal(fs.readFileSync(path.join(__dirname, '../renderer/dissolve-preview.js'), 'utf8'), buildDissolvePreview());
-assert.equal(fs.readFileSync(path.join(__dirname, '../renderer/dissolve-runtime-preview.js'), 'utf8'), buildDissolvePreview(true));
+assert.equal(fs.readFileSync(path.join(output, 'renderer/dissolve-preview.js'), 'utf8'), buildDissolvePreview());
+assert.equal(fs.readFileSync(path.join(output, 'renderer/dissolve-runtime-preview.js'), 'utf8'), buildDissolvePreview(true));
 const motion = fs.readFileSync(path.join(__dirname, '../styles/motion.css'), 'utf8');
 assert.ok(motion.includes('@media (prefers-reduced-motion: reduce)'));
 assert.ok(motion.includes('@starting-style'));
@@ -20,16 +23,16 @@ assert.ok(motion.includes('--sax-motion-offset: 0px;'));
 assert.ok(!/\btransform\s*:|transition\s*:\s*all|will-change\s*:/.test(motion), 'motion must preserve host positioning and avoid permanent layer promotion');
 for (const name of ['sax-dialog-enter', 'sax-surface-enter', 'sax-fade-exit']) assert.ok(motion.includes('@keyframes ' + name));
 assert.ok(!/\.toast\.closing\s*\{/.test(motion), 'host toast-out lifecycle must remain intact');
-function luminance(h,s,l) {
+function luminance(h: number,s: number,l: number): number {
   s/=100; l/=100;
   const a=s*Math.min(l,1-l);
   const rgb=[0,8,4].map(n=> { const k=(n+h/30)%12; const c=l-a*Math.max(-1,Math.min(k-3,9-k,1)); return c<=.04045?c/12.92:((c+.055)/1.055)**2.4; });
   return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;
 }
-const contrast=(a,b)=>(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+const contrast=(a: number,b: number)=>(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
 let min=Infinity;
 for(const [mode,p] of Object.entries(palettes)) {
-  const css=fs.readFileSync(path.join(__dirname,`../themes/sax-${mode}.css`),'utf8');
+  const css=fs.readFileSync(path.join(output,`themes/sax-${mode}.css`),'utf8');
   assert.equal(css,build(mode),'stale generated CSS');
   const defined=new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map(m=>m[1]));
   for(const m of css.matchAll(/var\((--sax-[\w-]+)\)/g)) assert.ok(defined.has(m[1]),`undefined ${m[1]}`);
@@ -50,8 +53,8 @@ for(const [mode,p] of Object.entries(palettes)) {
   }
   for (const state of ['fill','fill-hover','fill-active']) {
     for (const name of Object.keys(hues)) assert.ok(css.includes(`hsl(var(--sax-${name}-h) var(--sax-${state}-s) var(--sax-${state}-l))`));
-    const s = Number(css.match(new RegExp(`--sax-${state}-s: ([0-9]+)%`))[1]);
-    const l = Number(css.match(new RegExp(`--sax-${state}-l: ([0-9]+)%`))[1]);
+    const s = Number(css.match(new RegExp(`--sax-${state}-s: ([0-9]+)%`))![1]);
+    const l = Number(css.match(new RegExp(`--sax-${state}-l: ([0-9]+)%`))![1]);
     assert.ok(contrast(luminance(hues.primary,s,l),luminance(245,32,p.surface)) >= 4.5, `${mode} primary ${state}`);
   }
   for(const [name,h] of Object.entries(hues)) {
@@ -64,8 +67,14 @@ for(const [mode,p] of Object.entries(palettes)) {
   }
 }
 (async()=>{
-  const commands=[]; let opened=false;
-  global.pi={commands:{register:async c=>commands.push(c),unregister:async id=>assert.equal(id,commands[0].id)},ui:{openPanel:async()=>{opened=true;}}};
-  const plugin=require('../main.js'); await plugin.onLoad(); assert.equal(commands.length,1); await commands[0].run(); assert.ok(opened); await plugin.onUnload();
+  const commands: CommandRegistration[]=[]; let opened=false;
+  const host: MainPluginApi = {commands:{register:async c=>{commands.push(c);},unregister:async id=>assert.equal(id,commands[0].id)},ui:{openPanel:async()=>{opened=true;}}};
+  const globals = globalThis as typeof globalThis & { pi?: MainPluginApi };
+  const previous = globals.pi;
+  globals.pi = host;
+  try {
+    const plugin = require(path.join(output, 'main.js')) as { onLoad(): Promise<void>; onUnload(): Promise<void> };
+    await plugin.onLoad(); assert.equal(commands.length,1); await commands[0].run(); assert.ok(opened); await plugin.onUnload();
+  } finally { if (previous) globals.pi = previous; else delete globals.pi; }
   console.log(`PASS: native transparent background + radius declaration, permission, generated CSS, shared HSL, directional shadows, glass, 60 semantic pairs (min ${min.toFixed(2)}:1), 6 action pairs, lifecycle mock.`);
 })().catch(e=>{console.error(e);process.exitCode=1;});

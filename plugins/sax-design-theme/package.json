@@ -3,11 +3,13 @@
   "private": true,
   "version": "0.5.3",
   "scripts": {
-    "build": "node scripts/build.cjs",
-    "test": "node scripts/test.cjs",
-    "test:browser": "node ../../scripts/workspace.cjs browser sax-design-theme"
+    "build": "tsx ../../scripts/workspace.ts build sax-design-theme",
+    "test": "tsx ../../scripts/workspace.ts test sax-design-theme",
+    "test:browser": "tsx ../../scripts/workspace.ts browser sax-design-theme",
+    "typecheck": "tsc --noEmit -p ../../tsconfig.json"
   },
   "devDependencies": {
+    "@pi-plugins/plugin-types": "workspace:*",
     "@pi-plugins/test-utils": "workspace:*"
   }
 }

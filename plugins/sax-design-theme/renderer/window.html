@@ -20,7 +20,4 @@ h1{font-size:24px;margin:0}p{line-height:1.7;color:var(--sax-secondary)}
 <header class="titlebar">SAX / TRANSPARENT HOST</header>
 <div class="controls"><button id="mode">深色</button><button id="maximize" aria-pressed="false">最大化</button></div>
 <div class="layout"><main class="main-pane"><h1>原始窗口尺寸。</h1><p>零外框留白，零根容器投影，不做 CSS 圆角裁切。标题栏和面板使用原始窗口坐标。</p><p class="status">8px 圆角由宿主 windowAppearance.cornerRadius 实现，浏览器不会模拟原生裁切。</p><a href="index.html">返回色彩预览</a><div class="composer-shell"><textarea class="composer-input" aria-label="模拟输入框" placeholder="试试输入焦点…"></textarea><span class="status">内部组件阴影保留</span></div></main><aside class="work-panel" data-maximized="true"><h2>工作面板</h2><p>正常、最大化及全屏都铺满可用区域。</p><p>窗口外侧的圆角与阴影由宿主负责。</p></aside></div>
-</div></div><script>
-document.getElementById('mode').onclick=()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';document.getElementById('theme').href=`../themes/sax-${dark?'dark':'light'}.css`;document.getElementById('mode').textContent=dark?'浅色':'深色';};
-document.getElementById('maximize').onclick=()=>{const max=document.documentElement.dataset.maximized!=='true';document.documentElement.dataset.maximized=String(max);document.getElementById('maximize').textContent=max?'还原':'最大化';document.getElementById('maximize').setAttribute('aria-pressed',String(max));};
-</script></body></html>
+</div></div><script src="window.js"></script></body></html>

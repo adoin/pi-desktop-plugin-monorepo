@@ -6,7 +6,10 @@
  * usually means widening `permissions` too.
  */
 
-async function onLoad() {
+import type { MainPluginApi } from '@pi-plugins/plugin-types';
+declare const pi: MainPluginApi;
+
+export async function onLoad() {
   await pi.commands.register({
     id: "pi-desktop-sax-theme.open",
     title: "sax-design-theme: Open Panel",
@@ -17,8 +20,6 @@ async function onLoad() {
   });
 }
 
-async function onUnload() {
+export async function onUnload() {
   await pi.commands.unregister("pi-desktop-sax-theme.open");
 }
-
-module.exports = { onLoad, onUnload };

@@ -1,4 +1,5 @@
-'use strict';
+import type { PreviewDocument } from '../runtime-types.js';
+const document = window.document as PreviewDocument;
 const theme = document.getElementById('theme');
 const toggle = document.getElementById('toggle');
 const palette = document.getElementById('palette');

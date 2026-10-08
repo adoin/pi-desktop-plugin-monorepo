@@ -1,8 +1,8 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { pathToFileURL } = require('node:url');
+import fs from 'node:fs';
+import path from 'node:path';
+import puppeteer from 'puppeteer-core';
 
-function findBrowser(env = process.env) {
+export function findBrowser(env: NodeJS.ProcessEnv = process.env): string {
   const explicit = env.PI_TEST_BROWSER || env.SAX_TEST_BROWSER;
   if (explicit) {
     if (!fs.existsSync(explicit)) throw new Error(`Browser does not exist: ${explicit}`);
@@ -20,8 +20,6 @@ function findBrowser(env = process.env) {
   if (!found) throw new Error('No Chromium browser found. Set PI_TEST_BROWSER to your Chrome/Edge executable.');
   return found;
 }
-async function launchBrowser() {
-  const { default: puppeteer } = await import(pathToFileURL(require.resolve('puppeteer-core')));
+export async function launchBrowser() {
   return puppeteer.launch({ headless: true, executablePath: findBrowser() });
 }
-module.exports = { launchBrowser, findBrowser };

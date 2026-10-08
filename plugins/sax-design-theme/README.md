@@ -10,7 +10,7 @@
 
 ## 0.5.3 工程迁移与名称
 
-源码迁入 `plugins/sax-design-theme/`。插件显示名、面板标题和命令标题统一为 sax-design-theme；命令 ID 和主题 ID 保留兼容。开发加载选择这个子目录，不要加载 monorepo 根目录。
+源码迁入 `plugins/sax-design-theme/`，执行逻辑、构建和测试均使用 strict TypeScript，公用宿主 API 类型位于 `packages/plugin-types/`。先在根目录执行 `pnpm typecheck`、`pnpm build sax-design-theme`，开发加载选择 `.artifacts/plugins/sax-design-theme/`，不要加载源码或 monorepo 根目录。该目录是唯一运行产物，不再保留 build/stage 副本。下文 renderer 预览路径均相对于运行目录；插件、命令和主题 ID 保留兼容。
 
 正式包从 `.artifacts/plugins/sax-design-theme/` 使用 PluginCheck / PluginPack 生成，再由根目录 `pnpm release:collect sax-design-theme` 收集到 `.artifacts/releases/`，提交专门的插件发布网页，不走官方仓库 PR。
 
@@ -18,11 +18,11 @@
 
 退出交接从 16ms 定时扫描移至 MutationObserver 的同轮更新，在下一次绘制前接上已有快照。任务原始行消失后立即显示原位副本，240ms 回滚观察期内保持不变，随后开始溶解；恢复的行会取消副本。弹窗遮罩随副本渐退，不再突然撤掉遮罩后补回表面。快照保留无外部 URL 的背景渐变。
 
-已带 `.closing`、`.sax-motion-leaving`、关闭状态或退出动画的表面，不在真正卸载后补播完整副本，避免“先淡出、再出现、再溶解”。快速重开会清理前一次副本及遮罩。`scripts/test-handoff.cjs` 检查首个退出帧、明暗连续帧、已有淡出不重播和重开清理；真实宿主仍需更新后确认。
+已带 `.closing`、`.sax-motion-leaving`、关闭状态或退出动画的表面，不在真正卸载后补播完整副本，避免“先淡出、再出现、再溶解”。快速重开会清理前一次副本及遮罩。`scripts/test-handoff.ts` 检查首个退出帧、明暗连续帧、已有淡出不重播和重开清理；真实宿主仍需更新后确认。
 
 ## 0.5.1 搜索美化与测试入口
 
-搜索不再套用通用半透明玻璃面板：改为不透明浅色／深紫灰表面，避免背后聊天文字透进结果。浅色遮罩为 10% 紫色，深色为 24% 深色，背景模糊 10px。输入容器、分组标签、选中项与结果间距独立适配；无分割线，面板 8px、结果 4px 圆角。`renderer/search.html` 可预览，`node scripts/test-search.cjs` 验证明暗、焦点、过滤、键盘和窄屏布局。
+搜索不再套用通用半透明玻璃面板：改为不透明浅色／深紫灰表面，避免背后聊天文字透进结果。浅色遮罩为 10% 紫色，深色为 24% 深色，背景模糊 10px。输入容器、分组标签、选中项与结果间距独立适配；无分割线，面板 8px、结果 4px 圆角。`renderer/search.html` 可预览，`pnpm exec tsx scripts/test-search.ts` 验证明暗、焦点、过滤、键盘和窄屏布局。
 
 粒子测试入口已放在首页顶部「从这里测试」：
 - 弹窗：打开 `renderer/motion.html`，保持粒子开启，打开弹窗后关闭或按 Escape。
@@ -61,7 +61,7 @@
 
 ## 颜色与字体
 
-HSL 语义色同一级别只改变 H，S/L 状态共享。primary=252、success=150、warning=38、error=4、info=195、purple=285；base/hover/active/soft/subtle/fill 令牌由 `scripts/build.cjs` 统一生成。代码优先 Maple Mono / Maple Mono NF CN / Maple Mono NF，数字使用本机等宽字体并启用 tabular-nums。字体未随包分发，Maple Mono 需本机安装。
+HSL 语义色同一级别只改变 H，S/L 状态共享。primary=252、success=150、warning=38、error=4、info=195、purple=285；base/hover/active/soft/subtle/fill 令牌由 `scripts/build.ts` 统一生成。代码优先 Maple Mono / Maple Mono NF CN / Maple Mono NF，数字使用本机等宽字体并启用 tabular-nums。字体未随包分发，Maple Mono 需本机安装。
 
 ## 开发与测试
 
@@ -80,6 +80,6 @@ pnpm test:workspace
 
 浏览器启动器来自 workspace 包 `@pi-plugins/test-utils`，不再依赖另一个 sax-design-vue 工程的 node_modules。运行安装包不包含这些开发依赖。
 
-`themes/` 和 `renderer/dissolve-*-preview.js` / `renderer/dissolve-preview.js` 是生成产物。file:// 预览将同一份引擎及观察器构建成普通脚本；生产入口使用 ES Modules，预览开关不会注入宿主。
+`themes/` 和运行 JavaScript 均为生成产物，仅写入根目录 `.artifacts/plugins/sax-design-theme/`。TypeScript 主入口编译为 main.js，宿主扩展与共享引擎打包为 extension.mjs；file:// 预览用 esbuild 将同一份 TS 引擎及观察器构建成普通脚本。预览开关不会注入宿主，类型声明与开发依赖不会进入安装包。
 
 浏览器回归覆盖自然播放帧、退出状态、任务确认/失败/回滚/折叠/重排、敏感信息与裁剪、真实 SVG 像素变化、资源上限、减少动效、切换主题和卸载。实际宿主尚需安装授权后验收，不通过操作真实任务来代替测试数据。使用 PluginCheck / PluginPack 校验和打包。

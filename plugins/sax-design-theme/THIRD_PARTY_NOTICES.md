@@ -1,6 +1,6 @@
 # Third-party notices
 
-The SVG noise/erosion filter graph and dissolve progression in `renderer/dissolve.mjs`
+The SVG noise/erosion filter graph and dissolve progression in `renderer/dissolve.ts` (bundled into the runtime JavaScript)
 are adapted from Sax Design Vue / Vuesax Alpha:
 `packages/components/base/src/svg-dissolve-filter.vue` and
 `packages/hooks/use-svg-dissolve/index.ts`. Vue lifecycle integration is not copied;

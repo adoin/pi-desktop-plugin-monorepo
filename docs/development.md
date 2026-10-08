@@ -1,49 +1,65 @@
-# 在 monorepo 中开发插件
+# TypeScript 插件开发
 
 ## 已有主题
 
-源码在 `plugins/sax-design-theme/`。显示名称为 sax-design-theme，内部 ID `local.pi-desktop-sax-theme` 保留兼容已有安装。根目录不是一个 PI-Desktop 插件；开发加载应选择插件子目录。
+源码在 `plugins/sax-design-theme/`。先 `pnpm install --frozen-lockfile`，再 `pnpm typecheck`、`pnpm build sax-design-theme`。开发加载 `.artifacts/plugins/sax-design-theme/`，预览打开该目录下 `renderer/index.html`。不要加载源码目录，也不要编辑产物。
 
-先在根目录 `pnpm install --frozen-lockfile`，然后按需要执行 `pnpm build sax-design-theme`、`pnpm test sax-design-theme`、`pnpm test:browser sax-design-theme`。省略最后一个参数会处理所有已配置插件。
+所有执行逻辑、构建及测试使用 TypeScript。根 `tsconfig.json` 启用 strict、noEmit；`tsx` 执行开发脚本，esbuild 编译运行代码。主题 `main.ts` 编译为 CommonJS `main.js`，`renderer/extension.ts` 连同引擎打包为 ESM `extension.mjs`，浏览器预览编译为 IIFE。HTML/CSS 不需要改成 TS。安装端不需要 tsx、TypeScript 或 workspace 依赖。
+
+## 集中共用类型
+
+`packages/plugin-types/src/index.ts` 定义插件共用的命令注册、主入口 API、renderer layer API；`src/project.ts` 定义 PluginProject、PluginManifest、WorkspacePlugin、ReleaseInfo 等工程接口。声明仅覆盖仓库已用到的宿主契约，不声称是完整官方 SDK。扩展宿主能力时按实际接口补充类型和权限。
+
+插件在 devDependencies 声明 `"@pi-plugins/plugin-types": "workspace:*"`，使用 `import type`，不在各插件复制一套 API 类型。主题私有的粒子快照、预览测试钩子仍留在主题目录，不放入公共 API。不要用 any 或 ts-nocheck 绕过迁移。
+
+```ts
+import type { MainPluginApi } from '@pi-plugins/plugin-types';
+declare const pi: MainPluginApi;
+export async function onLoad(): Promise<void> {
+  await pi.ui.openPanel({ title: 'Example' });
+}
+```
 
 ## 新增插件
 
-使用 PI-Desktop 的 **PluginScaffold** 在 `plugins/<新插件名>/` 创建，不手写替代安装器规则的骨架。新插件使用独立 ID，不复制已有插件 ID。
-
-在该子目录补充 workspace `package.json`（private: true、独立版本）与 `plugin.project.json`。例如：
+先使用 PI-Desktop **PluginScaffold** 在 `plugins/<新插件名>/` 创建插件，再迁入 TypeScript 源码，补充 private workspace package.json 和 plugin.project.json；不手写替代安装器的骨架，不复制主题 ID。
 
 ```json
 {
   "tasks": {
-    "build": ["scripts/build.cjs"],
-    "test": ["scripts/test.cjs"],
+    "build": ["scripts/build.ts"],
+    "test": ["scripts/test.ts"],
     "browser": []
   },
-  "runtime": ["manifest.json", "main.js", "renderer"]
+  "assets": ["manifest.json"],
+  "generated": ["main.js"],
+  "runtime": ["manifest.json", "main.js"]
 }
 ```
 
-任务数组中的文件会通过 Node 执行，工作目录是该插件。无构建需求可将 build 设为空数组。runtime 必须是实际运行文件的白名单，不允许路径越界、符号链接、node_modules 或工作区开发脚本。按插件真实贡献补上主题、技能、资源等目录。
+`assets` 是从源码原样复制的静态文件白名单；`generated` 是构建生成的文件或整目录；`runtime` 是最终运行目录白名单。混合目录应逐个声明静态文件，不能把含 `.ts` 的整个 renderer 当静态资源复制。所有相对路径禁止越界和符号链接，运行目录不包含 ts、map、node_modules 或开发脚本。
 
-需要共用浏览器测试时在子项目 devDependencies 声明 `"@pi-plugins/test-utils": "workspace:*"`，测试中使用：
+任务通过 Node + tsx 执行，cwd 为插件源码目录，`PI_PLUGIN_OUTPUT_DIR` 固定为根目录 `.artifacts/plugins/<插件名>/`。构建前只清空这个插件的运行目录并复制 assets，再执行 build 任务。无编译需求可用空 build 数组，依旧会复制静态运行文件。`stage` 兼容命令只做 build + test，不另存副本。
 
-```js
-const { launchBrowser } = require('@pi-plugins/test-utils');
-const browser = await launchBrowser();
-try { /* 插件自己的断言 */ } finally { await browser.close(); }
+```ts
+import path from 'node:path';
+import { buildSync } from 'esbuild';
+const output = process.env.PI_PLUGIN_OUTPUT_DIR;
+if (!output) throw new Error('请从仓库根目录执行 pnpm build <插件名>');
+buildSync({
+  entryPoints: ['main.ts'], outfile: path.join(output, 'main.js'),
+  bundle: true, platform: 'node', format: 'cjs', target: 'es2022'
+});
 ```
 
-从根目录重新执行 `pnpm install` 更新锁文件；将锁文件一起提交。
+manifest 指向编译后的文件，不能指向 `.ts`。子项目 package.json 命令转发到统一入口，例如 `tsx ../../scripts/workspace.ts build <插件名>`；新插件自动被发现，无需修改根任务脚本。新增 workspace 依赖后执行 `pnpm install` 并提交锁文件。
 
-## 共享边界
+## 测试与共享边界
 
-- 测试工具、纯算法和设计令牌可以进入 packages；任务选择器、宿主 DOM 适配和权限声明留在具体插件。
-- 当前只提取了 test-utils，没有为了目录漂亮而拆开粒子代码。
-- 运行代码若将来依赖 packages 内模块，必须由插件自己的构建脚本打包或复制进运行目录。不能让安装后的插件 import `../../packages/...` 或依赖另一个插件是否已安装。
-- 不用跨插件相对路径引用；开发依赖通过 workspace 声明。普通网页提交只需要单款插件的独立包，不需要仓库其他子项目。
+依次执行 `pnpm typecheck`、`pnpm build [插件名]`、`pnpm test [插件名]`、`pnpm test:browser [插件名]`、`pnpm test:workspace`。浏览器测试读取编译目录，公共启动器来自 `@pi-plugins/test-utils`，用本机 Chrome/Edge，可通过 `PI_TEST_BROWSER` 指定路径。
+
+测试工具和公用类型在 packages；主题引擎、宿主选择器和权限配置仍由主题维护。运行时依赖其他 packages 的模块必须打包到插件，不能让安装包 import `../../packages/...` 或依赖其他插件。公用类型只用 type-only import。
 
 ## Git 与版本
 
-main 同时包含所有插件源码。使用功能分支开发，不再为每款插件维持永久分支。提交可以按目录表达范围，例如 `feat(sax-design-theme): ...`。
-
-每款插件独立更新 manifest.json 和 package.json 的 version。公共工具包的修改不自动升级所有插件；只发布实际受影响且已测试的插件。
+只提交源码、配置和锁文件，不提交 `.artifacts`、node_modules、dist 或凭据。main 包含全部插件，使用功能分支与按插件限定的提交。各插件独立维护 manifest/package 版本一致；公共类型变化不会自动升级全部插件。

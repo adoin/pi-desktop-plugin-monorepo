@@ -1,13 +1,18 @@
 {
   "tasks": {
-    "build": ["scripts/build.cjs"],
-    "test": ["scripts/test.cjs"],
-    "browser": [
-      "scripts/test-motion.cjs",
-      "scripts/test-dissolve.cjs",
-      "scripts/test-handoff.cjs",
-      "scripts/test-search.cjs"
-    ]
+    "build": ["scripts/build.ts"],
+    "test": ["scripts/test.ts"],
+    "browser": ["scripts/test-motion.ts", "scripts/test-dissolve.ts", "scripts/test-handoff.ts", "scripts/test-search.ts"]
   },
+  "assets": [
+    "manifest.json", "README.md", "THIRD_PARTY_NOTICES.md", "docs",
+    "renderer/index.html", "renderer/motion.html", "renderer/dissolve.html",
+    "renderer/search.html", "renderer/window.html", "renderer/preview.css"
+  ],
+  "generated": [
+    "main.js", "themes", "renderer/extension.mjs", "renderer/preview.js",
+    "renderer/motion.js", "renderer/search.js", "renderer/window.js",
+    "renderer/dissolve-preview.js", "renderer/dissolve-runtime-preview.js"
+  ],
   "runtime": ["manifest.json", "main.js", "renderer", "themes", "README.md", "THIRD_PARTY_NOTICES.md", "docs"]
 }

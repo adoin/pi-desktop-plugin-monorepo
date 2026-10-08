@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "type": "commonjs",
-  "main": "browser.cjs",
+  "main": "browser.ts",
+  "types": "browser.ts",
   "dependencies": {
     "puppeteer-core": "25.3.0"
   }
